@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
             }
             if (allPermissionGranted){
                 val serviceIntent = Intent(this, TrackerService::class.java)
-                startForegroundService(serviceIntent)
+                ContextCompat.startForegroundService(this, serviceIntent)
                 finish()
             }else {
                 statusTextView.text = "Izin ditolak, service tidak dapat dijalankan"
@@ -91,6 +91,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
+        statusTextView = findViewById(R.id.statusTextView)
+        btnStart = findViewById(R.id.btnStart)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)

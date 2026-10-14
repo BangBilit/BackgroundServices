@@ -14,6 +14,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 
 import kotlin.math.abs
 
@@ -104,6 +105,13 @@ class TrackerService : Service(), SensorEventListener {
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
+
+        try {
+            NotificationManagerCompat.from(this).notify(NOTIFICATION_ID_JUMP_DETECTED, jumpNotification)
+        } catch (e:SecurityException){
+            Log.e("TrackerService",
+                "Gagal memunculkan notifikasi karena permission POST_NOTIFICATIONS tidak aktif: ${e.message}")
+        }
     }
 
     override fun onDestroy() {
