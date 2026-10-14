@@ -33,6 +33,10 @@ class MainActivity : AppCompatActivity() {
 
     companion object{
         const val ACTION_SERVICE_STOPPED_JUMP = "com.example.backgroundservices.ACTION_SERVICE_STOPPED_JUMP"
+        const val ACTION_SERVICE_STOPPED_LATIHAN = "com.example.backgroundservices.ACTION_SERVICE_STOPPED_LATIHAN"
+        const val EXTRA_MODE = "EXTRA_MODE"
+        const val MODE_TRACKER = "MODE_TRACKER"
+        const val MODE_LATIHAN = "MODE_LATIHAN"
         const val REQUEST_CODE_PERMISSIONS = 123
     }
 
@@ -44,6 +48,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var statusTextView: TextView
     private lateinit var btnStart: Button
+    private lateinit var btnLatihan: Button
+    private var pendingMode: String = MODE_TRACKER
 
     private fun startTrackerService(){
         val serviceIntent = Intent(this, TrackerService::class.java)
@@ -52,9 +58,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent?){
-        if (intent?.action == ACTION_SERVICE_STOPPED_JUMP){
-            statusTextView.text = "Background service sudah berhenti karena anda melompat"
+        when (intent?.action){
+            ACTION_SERVICE_STOPPED_JUMP -> { statusTextView.text = "Background service sudah berhenti karena anda melompat"
+            }
+            ACTION_SERVICE_STOPPED_LATIHAN -> {
+                statusTextView.text = "Latihan selesai"
+            }
         }
+    }
+    private fun startLatihanService() {
+        val serviceIntent = Intent(this, TrackerService::class.java).apply {
+            putExtra(EXTRA_MODE, MODE_LATIHAN)
+        }
+        ContextCompat.startForegroundService(this, serviceIntent)
+        statusTextView.text = "Latihan sedang berjalan. Silakan berjalan lebih dari 2 langkah"
     }
 
     override fun onNewIntent(intent: Intent){
@@ -94,6 +111,7 @@ class MainActivity : AppCompatActivity() {
 
         statusTextView = findViewById(R.id.statusTextView)
         btnStart = findViewById(R.id.btnStart)
+        btnLatihan = findViewById(R.id.btnLatihan)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -105,9 +123,25 @@ class MainActivity : AppCompatActivity() {
             if (hasAllPermission()){
                 startTrackerService()
             } else {
-                ActivityCompat.requestPermissions(this,
+                pendingMode = MODE_TRACKER
+                ActivityCompat.requestPermissions(
+                    this,
                     permissionToRequest,
-                    REQUEST_CODE_PERMISSIONS)
+                    REQUEST_CODE_PERMISSIONS
+                )
+            }
+        }
+
+        btnLatihan.setOnClickListener {
+            if (hasAllPermission()) {
+                startLatihanService()
+            } else {
+                pendingMode = MODE_LATIHAN
+                ActivityCompat.requestPermissions(
+                    this,
+                    permissionToRequest,
+                    REQUEST_CODE_PERMISSIONS
+                )
             }
         }
 
