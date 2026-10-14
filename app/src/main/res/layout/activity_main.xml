@@ -10,6 +10,7 @@
     android:layout_marginTop="20dp">
 
     <TextView
+        android:id="@+id/statusTextView"
         android:layout_width="404dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -18,6 +19,7 @@
         android:paddingHorizontal="20dp"/>
 
     <Button
+        android:id="@+id/btnStart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Mulai Lacak Aktivitas"
