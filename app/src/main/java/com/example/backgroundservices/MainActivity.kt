@@ -1,10 +1,16 @@
 package com.example.backgroundservices
 
 import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Button
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
@@ -30,6 +36,57 @@ class MainActivity : AppCompatActivity() {
         const val REQUEST_CODE_PERMISSIONS = 123
     }
 
+    private fun hasAllPermission(): Boolean{
+        return permissionToRequest.all {
+            ContextCompat.checkSelfPermission(this,it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private lateinit var statusTextView: TextView
+    private lateinit var btnStart: Button
+
+    private fun startTrackerService(){
+        val serviceIntent = Intent(this, TrackerService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent)
+        statusTextView.text = "Background service sedang berjalan"
+    }
+
+    private fun handleIntent(intent: Intent?){
+        if (intent?.action == ACTION_SERVICE_STOPPED_JUMP){
+            statusTextView.text = "Background service sudah berhenti karena anda melompat"
+        }
+    }
+
+    override fun onNewIntent(intent: Intent){
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            var allPermissionGranted = true
+            for (result in grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allPermissionGranted = false
+                    break
+                }
+            }
+            if (allPermissionGranted){
+                val serviceIntent = Intent(this, TrackerService::class.java)
+                startForegroundService(serviceIntent)
+                finish()
+            }else {
+                statusTextView.text = "Izin ditolak, service tidak dapat dijalankan"
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -39,5 +96,17 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        btnStart.setOnClickListener {
+            if (hasAllPermission()){
+                startTrackerService()
+            } else {
+                ActivityCompat.requestPermissions(this,
+                    permissionToRequest,
+                    REQUEST_CODE_PERMISSIONS)
+            }
+        }
+
+        handleIntent(intent)
     }
 }
